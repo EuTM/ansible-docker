@@ -1,0 +1,49 @@
+variables:
+  DOCKER_DRIVER: overlay
+
+before_script:
+
+stages:
+- build
+- container
+- deploy
+
+build:
+  stage: build
+  script:
+  - build you-app
+
+container-master:
+  stage: container
+  image: docker
+  services:
+  - docker:dind
+  script:
+  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+  - docker build -t $CI_REGISTRY_IMAGE:latest .
+  - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+  - master
+
+container-tag:
+  stage: container
+  image: docker
+  services:
+  - docker:dind
+  script:
+  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+  - docker build -t $CI_REGISTRY_IMAGE:$CI_BUILD_TAG .
+  - docker push $CI_REGISTRY_IMAGE:$CI_BUILD_TAG
+  only:
+  - tags
+
+deploy:
+  stage: deploy
+  image: docker:latest
+  services:
+  - docker:dind
+  script:
+  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+  - docker run $CI_REGISTRY/my-group/ansible:latest update client
+  only:
+  - master

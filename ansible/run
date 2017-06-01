@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if [ -z $1 ]; then
+  /bin/sh
+elif [ -z $2 ]; then
+  echo Executing Playbook $1...
+  ansible-playbook $1.yml
+else
+  echo Executing Playbook $1 with tag $2...
+  ansible-playbook $1.yml -t $2
+fi

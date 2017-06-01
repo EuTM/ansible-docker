@@ -1,0 +1,14 @@
+---
+- name: Create mongodb directory
+  file: path=/opt/mongodb state=directory
+
+- name: Install mongo container
+  docker_container:
+    name: mongo
+    image: mongo
+    state: started
+    pull: yes
+    ports:
+    - 127.0.0.1:27017:27017
+    volumes:
+    - /opt/mongodb:/data/db

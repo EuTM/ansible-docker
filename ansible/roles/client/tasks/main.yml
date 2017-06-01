@@ -1,0 +1,8 @@
+---
+- name: Install client
+  docker_container:
+    name: client
+    image: registry.gitlab.com/my-group/client
+    state: started
+    pull: yes
+    restart_policy: always

@@ -1,0 +1,11 @@
+---
+- name: Install server container
+  docker_container:
+    name: server
+    image: registry.gitlab.com/my-group/server
+    state: started
+    pull: yes
+    links:
+    - mongo
+    env:
+      DATABASE: mongodb://mongo:27017/database

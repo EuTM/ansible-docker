@@ -1,0 +1,50 @@
+variables:
+  DOCKER_DRIVER: overlay
+
+before_script:
+- docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+
+stages:
+- build
+- container
+- deploy
+
+container-master:
+  stage: container
+  image: docker
+  services:
+  - docker:dind
+  script:
+  - docker build -t $CI_REGISTRY_IMAGE:latest .
+  - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+  - master
+
+container-tag:
+  stage: container
+  image: docker
+  services:
+  - docker:dind
+  script:
+  - docker build -t $CI_REGISTRY_IMAGE:$CI_BUILD_TAG .
+  - docker push $CI_REGISTRY_IMAGE:$CI_BUILD_TAG
+  only:
+  - tags
+
+setup:
+  stage: deploy
+  image: docker:latest
+  services:
+  - docker:dind
+  script:
+  - docker run $CI_REGISTRY_IMAGE:latest setup
+  when: manual
+
+update:
+  stage: deploy
+  image: docker:latest
+  services:
+  - docker:dind
+  script:
+  - docker run $CI_REGISTRY_IMAGE:latest update
+  when: manual

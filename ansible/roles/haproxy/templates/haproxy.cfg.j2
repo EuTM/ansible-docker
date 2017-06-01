@@ -1,0 +1,46 @@
+# {{ ansible_managed }}
+
+global
+  log 127.0.0.1 local2
+  pidfile /var/run/haproxy.pid
+  maxconn 4096
+  lua-load /usr/local/etc/haproxy/acme-http01-webroot.lua
+  crt-base /usr/local/etc/haproxy/certs/
+  ssl-default-bind-ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK
+  tune.ssl.default-dh-param 4096
+
+defaults
+  log     global
+  mode    http
+  option  httplog
+  option  dontlognull
+  option  forwardfor
+  option  http-server-close
+  option  log-health-checks
+  timeout connect  5s
+  timeout client  10s
+  timeout server  10m
+
+frontend http-in
+  bind *:80
+  mode http
+  acl url_acme_http01 path_beg /.well-known/acme-challenge/
+  http-request use-service lua.acme-http01 if METH_GET url_acme_http01
+  redirect scheme https code 301 if !{ ssl_fc }
+
+frontend https-in
+  bind :443 ssl no-tls-tickets crt haproxy-example.com.pem no-sslv3 no-tls-tickets
+
+  reqadd X-Forwarded-Proto:\ https
+  rspadd Strict-Transport-Security:\ max-age=15768000
+
+  acl is_server path_beg /server
+  use_backend server if is_server
+
+  default_backend client
+
+backend server
+  server server server:3000
+
+backend client
+  server client client:80

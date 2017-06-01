@@ -1,0 +1,27 @@
+---
+- name: Create haproxy directory
+  file: path=/opt/haproxy state=directory
+
+- name: Copy haproxy configuration
+  template: src=haproxy.cfg.j2 dest=/opt/haproxy/haproxy.cfg
+
+- name: Install haproxy container
+  docker_container:
+    name: haproxy
+    image: bradjonesllc/docker-haproxy-letsencrypt
+    state: started
+    pull: yes
+    env:
+      CERTS: example.com
+      EMAIL: admin@example.com
+    volumes:
+    - /opt/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    - /opt/haproxy/certs:/usr/local/etc/haproxy/certs
+    restart_policy: always
+    restart: "{{configure_haproxy|changed}}"
+    ports:
+    - 80:80
+    - 443:443
+    links:
+    - server
+    - client

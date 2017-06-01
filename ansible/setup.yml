@@ -1,0 +1,6 @@
+# Designed for Digital Ocean Docker Image running on Ubuntu 14.04
+---
+- hosts: example
+  roles:
+  - role: common
+    tags: common

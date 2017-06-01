@@ -1,0 +1,12 @@
+# Designed for Digital Ocean Docker Image running on Ubuntu 14.04
+---
+- hosts: example
+  roles:
+  - role: mongo
+    tags: mongo
+  - role: server
+    tags: server
+  - role: client
+    tags: client
+  - role: haproxy
+    tags: haproxy

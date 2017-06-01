@@ -1,0 +1,35 @@
+# Common configuration for Digital Ocean's Debian 8.5 Image
+---
+- name: Create swap file
+  script: create_swap.sh creates=/swapfile
+
+- name: Set timezone
+  command: timedatectl set-timezone Europe/Berlin
+
+- name: Add Docker PGP Key
+  apt_key: keyserver=pgp.mit.edu id=58118E89F3A912897C070ADBF76221572C52609D
+
+- name: Add Docker Repo
+  apt_repository: repo='deb https://apt.dockerproject.org/repo debian-jessie main'
+
+- name: Upgrade packages
+  apt: update_cache=yes upgrade=yes
+  ignore_errors: yes
+
+- name: Install packages
+  apt: name={{ item }}
+  with_items:
+  - ntp
+  - python-setuptools
+  - apt-transport-https
+  - docker-engine
+
+- name: Install pip
+  easy_install: name=pip
+
+- name: Install docker-py
+  pip: name=docker-py
+
+- name: Login to registry
+  command: docker login {{ docker_registry }} -u {{ docker_registry_user }} -p {{ docker_registry_password }}
+  when: docker_registry_user is defined
